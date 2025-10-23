@@ -41,7 +41,8 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           source venv/bin/activate
-          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload &
+          cd ${{ github.workspace }}
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
           for i in {1..10}; do
             curl -f http://127.0.0.1:8000/ && break
             sleep 2
