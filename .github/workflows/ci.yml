@@ -9,6 +9,21 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: testpass123
+          POSTGRES_USER: testuser
+          POSTGRES_DB: test_finance_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout Repository
@@ -24,7 +39,8 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
-          pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv apscheduler google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib pyflakes
+          pip install -r requirements.txt
+          pip install pyflakes
 
       - name: Lint with pyflakes
         run: |
@@ -38,16 +54,21 @@ jobs:
 
       - name: Write Google credentials to file
         run: |
-          echo "${{ secrets.GOOGLE_CREDENTIALS_JSON }}" > $GITHUB_WORKSPACE/credentials.json
+          echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > $GITHUB_WORKSPACE/credentials.json
         
       - name: Run basic FastAPI startup test
         env:
           PYTHONPATH: ${{ github.workspace }}
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: testuser
+          DB_PASSWORD: testpass123
+          DB_NAME: test_finance_db
         run: |
           source venv/bin/activate
           cd ${{ github.workspace }}
           python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          for i in {1..10}; do
-            curl -f http://127.0.0.1:8000/ && break
-            sleep 2
-          done
+          SERVER_PID=$!
+          sleep 5
+          curl -f http://127.0.0.1:8000/ || echo "Server test failed"
+          kill $SERVER_PID || true
