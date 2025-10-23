@@ -9,6 +9,21 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: testpass123
+          POSTGRES_USER: testuser
+          POSTGRES_DB: test_finance_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout Repository
@@ -44,6 +59,11 @@ jobs:
       - name: Run basic FastAPI startup test
         env:
           PYTHONPATH: ${{ github.workspace }}
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: testuser
+          DB_PASSWORD: testpass123
+          DB_NAME: test_finance_db
         run: |
           source venv/bin/activate
           cd ${{ github.workspace }}
