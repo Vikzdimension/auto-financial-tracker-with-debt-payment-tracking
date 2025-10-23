@@ -36,6 +36,10 @@ jobs:
           source venv/bin/activate
           python -m compileall app
 
+      - name: Write Google credentials to file
+        run: |
+          echo "${{ secrets.GOOGLE_CREDENTIALS_JSON }}" > $GITHUB_WORKSPACE/credentials.json
+        
       - name: Run basic FastAPI startup test
         env:
           PYTHONPATH: ${{ github.workspace }}

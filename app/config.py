@@ -5,7 +5,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-GOOGLE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "../credentials.json")
+# GOOGLE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "../credentials.json")
+GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_CREDENTIALS_PATH", os.path.join(BASE_DIR, "../credentials.json"))
+
 TOKEN_PATH = os.path.join(BASE_DIR, "../token.json")
 
 #gmail scopes

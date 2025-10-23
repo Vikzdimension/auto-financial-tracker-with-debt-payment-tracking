@@ -35,4 +35,3 @@ token.json
 # Database
 *.db
 *.sqlite3
-token.json
