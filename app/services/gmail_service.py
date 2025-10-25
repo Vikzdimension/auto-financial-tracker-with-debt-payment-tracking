@@ -7,7 +7,6 @@ import re
 from datetime import timezone
 from app.config import GOOGLE_CREDENTIALS_PATH, TOKEN_PATH, SCOPES
 
-
 def get_gmail_service(token_path: str = TOKEN_PATH):
     creds = None
 
@@ -71,10 +70,27 @@ def get_message_detail(service, msg_id):
 
 
 def parse_amount(text: str):
-    matches = re.findall(r'₹?\$?\d+(?:,\d{3})*(?:\.\d{1,2})?', text)
+    matches = re.findall(r'(?:INR|Rs\.?)\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)', text)
     if matches:
         try:
             return float(matches[0].replace(',', '').replace('₹', '').replace('$', ''))
         except ValueError:
             return 0.0
     return 0.0
+
+def fetch_transaction_emails(service, days_back=1, max_results=50):
+
+    from datetime import datetime, timedelta
+    
+    since_date = datetime.now() - timedelta(days=days_back)
+    date_str = since_date.strftime('%Y/%m/%d')
+    
+    query = f'after:{date_str} (from:axisbank.com OR from:hdfcbank.com OR from:hdfcbank.net OR from:sbi.co.in OR from:icicibank.com) (debited OR debit OR withdrawn)'
+    
+    results = service.users().messages().list(
+        userId='me',
+        q=query,
+        maxResults=max_results
+    ).execute()
+    
+    return results.get('messages', [])
