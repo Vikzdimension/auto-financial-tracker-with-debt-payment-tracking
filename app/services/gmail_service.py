@@ -5,7 +5,7 @@ from google.auth.transport.requests import Request
 import os
 import re
 from datetime import timezone
-from app.config import GOOGLE_CREDENTIALS_PATH, TOKEN_PATH, SCOPES
+from app.config import TOKEN_PATH, SCOPES, CLIENT_CONFIG
 
 def get_gmail_service(token_path: str = TOKEN_PATH):
     creds = None
@@ -23,7 +23,9 @@ def get_gmail_service(token_path: str = TOKEN_PATH):
             creds.refresh(Request())
         else:
             print("Opening browser to authenticate your Google account")
-            flow = InstalledAppFlow.from_client_secrets_file(GOOGLE_CREDENTIALS_PATH, SCOPES)
+            if not CLIENT_CONFIG:
+                raise Exception("Google credentials not configured in environment variables")
+            flow = InstalledAppFlow.from_client_config(CLIENT_CONFIG, SCOPES)
             creds = flow.run_local_server(port=0)
         # Save token
         with open(token_path, 'w') as token:
